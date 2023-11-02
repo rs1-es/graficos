@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <meta name="description" content="Crea gráficos fácilmente desde archivos CSV/TSV y JSON"/>
+    <title>RS1 Gráficos</title>
+    <script src="echarts.min.js"></script>
+    <link rel="shortcut icon" href="favicon.png" type="image/png"/>
+  </head>
+  <style>
+    code {
+      background-color: #DDD;
+    }
+    body {
+      background-color: #EEE;
+      margin: auto;
+      font-family: 'Arial', 'sans-serif';
+    }
+    header {
+      background-color: #009;
+      color: white;
+      padding: 0 0.2em;
+    }
+    h1 {
+      margin: 0;
+      padding: 0.1em;
+    }
+    h2 {
+      margin: 0;
+      padding-bottom: 0.1em;
+      font-size: 1em;
+    }
+    main {
+      padding: 0.8em 0.4em;
+      max-width: 800px;
+      margin: auto;
+    }
+    .step {
+      background-color: white;
+      border: 1px solid grey;
+      padding: 0.2em;
+      margin-bottom: 0.4em;
+    }
+    .step h3 {
+      margin: 0;
+      padding-bottom: 0.4em;
+    }
+    .category {
+      padding: 0.7em 0;
+      border-bottom: 1px solid #DDD;
+      max-width: 500px;
+    }
+    .category label {
+      display: block;
+      padding-bottom: 0.2em;
+    }
+    .category span {
+      font-style: italic;
+      font-size: 0.9em;
+    }
+    footer {
+      background-color: #009;
+      color: white;
+      padding: 0.4em;
+    }
+    footer h4 {
+      margin: 0;
+      padding-bottom: 0.2em;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    footer p {
+      margin: 0;
+      padding-bottom: 0.2em;
+    }
+  </style>
+  <body>
+    <header>
+      <h1>RS1 Gráficos</h1>
+      <h2>Crea gráficos fácilmente desde archivos CSV/TSV y JSON</h2>
+    </header>
+    <main>
+      <div class="step">
+        <h3>1. Carga un archivo:</h3>
+        <div><input type="file" id="file" style="width: 200px" autocomplete="off"/></div>
+        <div class="category">
+          <label for="fileType">Tipo archivo:</label>
+          <select id="fileType" name="fileType" autocomplete="off">
+            <option value="csv">CSV/TSV</option>
+            <option value="json">JSON</option>
+          </select>
+          <span>(Selecciona entre <code>CSV/TSV</code> y <code>JSON</code>)</span>
+        </div>
+        <div class="category">
+          <label for="sep">Separación campos:</label>
+          <input id="sep" name="sep" style="width: 50px" placeholder="," autocomplete="off"/>
+          <span>(Por ejemplo: <code>,</code>, <code>;</code>, <code>\t</code>)</span>
+        </div>
+        <div class="category">
+        <label for="includeHeader">Incluye cabecera:</label><input type="checkbox" id="includeHeader" name="includeHeader" checked autocomplete="off"/>
+        <span>(CSV/TSV: Selecciona si datos incluyen nombres de columnas)</span>
+        </div>
+      </div>
+      <div class="step">
+        <h3>2. Modifica datos de entrada:</h3>
+        <div class="category">
+        <label for="columnNames">Añadir/Cambiar nombres columnas:</label>
+          <input id="columnNames" name="columnNames" placeholder="a,b" style="width: 100px" autocomplete="off"/>
+          <span>(Puedes añadir nombres de columnas si los datos no los tienen, o modificar los existentes. Utiliza la coma <code>,</code> como separación entre columnas)</span>
+        </div>
+        <div class="category">
+        <label for="reverseData">Invertir orden:</label><input type="checkbox" id="reverseData" name="reverseData" autocomplete="off"/>
+        <span>(Invierte el orden de las filas de los datos de origen)</span>
+        </div>
+      </div>
+      <div class="step">
+        <h3>3. Configura el gráfico:</h3>
+        <div class="category">
+          <label for="chartTitle">Título:</label>
+          <input type="text" id="chartTitle" placeholder="Mi grafico" autocomplete="off" style="width: 125px"/>
+          <span>(Añade un título para el gráfico. Por defecto se utiliza el nombre del archivo)</span>
+        </div>
+        <div class="category">
+          <label for="chartType">Tipo gráfico:</label>
+        <select id="chartType" name="chartType" autocomplete="off">
+          <option value="line">Línea</option>
+          <option value="bar">Barras</option>
+          <option value="scatter">Puntos</option>
+          <option value="pie">Tarta</option>
+        </select>
+        <span>(Selecciona entre gráfico de <code>líneas</code>, <code>barras</code>, <code>puntos</code> o tipo <code>tarta</code>)</span>
+        </div>
+        <div class="category">
+          <label for="area">Área:</label>
+          <input type="checkbox" id="area" autocomplete="off"/>
+          <span>(Sólo para gráficos de líneas: convierte líneas en áreas)</span>
+        </div>
+        <div class="category">
+          <label>Columnas:</label>
+          <input type="number" id="xIndex" placeholder="X" style="width: 50px" autocomplete="off"/>
+          <input type="number" id="yIndex" placeholder="Y" style="width: 50px" autocomplete="off"/>
+          <span>(Indica qué columna utilizar para el eje X y el eje Y. Por defecto se utiliza la primera como X y el resto como Y)</span>
+        </div>
+        <div class="category">
+          <label for="smooth">Suavizar línea:</label>
+          <input type="checkbox" id="smooth" autocomplete="off"/>
+          <span>(Sólo para gráficos de líneas: suaviza las líneas)</span>
+        </div>
+        <div class="category">
+          <label for="xType">Tipo X:</label>
+          <select id="xType" name="xType" autocomplete="off">
+            <option value="category">Categoría</option>
+            <option value="value">Numérico</option>
+            <option value="time">Tiempo</option>
+            <option value="log">Log</option>
+          </select>
+          <span>(Indica qué tipo de datos hay en el eje X: <code>categoría</code>, <code>numérico</code>, de <code>tiempo</code>, o tipo <code>log</code>)</span>
+        </div>
+        <div class="category">
+          <label>Mín/Máx Y:</label>
+          <input type="number" id="yMin" placeholder="min" style="width: 50px" autocomplete="off"/>
+          <input type="number" id="yMax" placeholder="max" style="width: 50px" autocomplete="off"/>
+          <span>(Especifica un mínimo y/o máximo para el eje Y. Por defecto se utilizan el mínimo y máximo de los datos de origen)</span>
+        </div>
+        <div class="category">
+          <label for="showAvg">Media:</label>
+          <input type="checkbox" id="showAvg" name="showAvg" autocomplete="off"/>
+          <span>(Calcula la media de los datos del eje Y y la muestra en el gráfico y en el apartado de estadísticas)</span>
+        </div>
+        <div class="category">
+          <label for="showMin">Mínimo:</label><input type="checkbox" id="showMin" name="showMin" autocomplete="off"/>
+          <span>(Calcula el mínimo de los datos del eje Y y lo muestra en el gráfico y en el apartado de estadísticas)</span>
+        </div>
+        <div class="category">
+          <label for="showMax">Máximo:</label><input type="checkbox" id="showMax" name="showMax" autocomplete="off"/>
+          <span>(Calcula el máximo de los datos del eje Y y lo muestra en el gráfico y en el apartado de estadísticas)</span>
+        </div>
+        <div class="category">
+        <label for="showMedian">Mediana:</label><input type="checkbox" id="showMedian" name="showMedian" autocomplete="off"/>
+        <span>(Calcula la mediana de los datos del eje Y y la muestra en el apartado de estadísticas)</span>
+        </div>
+        <div class="category">
+        <label for="showDev">Desviación:</label><input type="checkbox" id="showDev" name="showDev" autocomplete="off"/>
+        <span>(Calcula la desviación de los datos del eje Y y la muestra en el apartado de estadísticas)</span>
+        </div>
+        <div class="category">
+          <label for="calcDiffCheck">Calcular diferencias:</label>
+          <input type="checkbox" id="calcDiffCheck" name="calcDiffCheck" autocomplete="off"/>
+          <span>(Calcula la diferencia entre un dato y el anterior y la muestra en el gráfico)</span>
+        </div>
+        <div class="category">
+          <label for="histogram">Histograma:</label>
+          <input type="checkbox" id="histogram" name="histogram" autocomplete="off"/>
+          <span>(Muestra un histograma de los datos)</span>
+        </div>
+        <div class="category">
+          <label for="groupCheck">Agrupar:</label>
+          <input type="checkbox" id="groupCheck" name="groupCheck" autocomplete="off"/>
+          <select id="groupMethod" name="groupMethod" autocomplete="off">
+              <option value="sum">Suma</option>
+              <option value="count">Contar</option>
+              <option value="first">Primero</option>
+              <option value="average">Media</option>
+              <option value="q1">Q1</option>
+              <option value="q2">Mediana</option>
+              <option value="q3">Q3</option>
+              <option value="min">Mínimo</option>
+              <option value="max">Máximo</option>
+            </select>
+            <span>(Agrupa datos de la misma categoría, calcula la operación especificada y la muestra en el gráfico)</span>
+        </div>
+        <div class="category">
+          <label for="orderIndex">Ordenar:</label>
+          <input type="number" id="orderIndex" name="orderIndex" placeholder="0" style="width: 50px" autocomplete="off"/>
+          <select id="orderDir" name="orderDir">
+            <option value="desc">Descendiente</option>
+            <option value="asc">Ascendiente</option>
+          </select>
+          <span>(Ordena la columna indicada)</span>
+        </div>
+        <div class="category">
+          <label for="movAvg">Media móvil:</label>
+          <input type="checkbox" id="movAvg" autocomplete="off"/>
+          <input type="number" id="movAvgPeriod" name="movAvgPeriod" placeholder="per" style="width: 50px" autocomplete="off"/>
+          <span>(Calcula la media móvil, con el período especificado. Por ejemplo, <code>3</code> para utilizar los 3 últimos datos)</span>
+        </div>
+        <div class="category">
+          <label>Generar modelo:</label>
+          <input type="checkbox" id="regression" autocomplete="off"/>
+          <select id="regType" name="regType" autocomplete="off">
+            <option value="linear">Lineal</option>
+            <option value="exponential">Exponencial</option>
+            <option value="logarithmic">Logarítmico</option>
+            <option value="polynomial">Polinómico</option>
+          </select>
+          <span>(Genera un modelo <code>lineal</code>, <code>exponencial</code>, <code>logarítmico</code> o <code>polinómico</code> con los datos y lo muestra en el gráfico)</span>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; padding: 0.5em; margin: 1em 0"><button id="submit" style="font-size: 1.2em; background-color: #090; color: white; border: none; padding: 0.2em 0.4em; border-radius: 5px; font-weight: bold; cursor: pointer">Crear gráfico</button></div>
+      <div class="step">
+        <h3>Gráfico:</h3>
+        <div id="chart" style="max-width: 900px; height:450px; margin: auto; padding-top: 0.5em; padding-bottom: 0.5em"></div>
+      </div>
+      <div class="step">
+        <h3>Estadísticas:</h3>
+        <div id="stats" style="padding-top: 0.5em"></div>
+      </div>
+    </main>
+    <footer>
+      <h4>RS1 Gráficos</h4>
+      <p>Motor de gráficos: <a style="color: white" href="https://echarts.apache.org/en/index.html">Apache ECharts</a>
+      <p>Contacto: <a style="color: white" href="mailto:admin@rs1.es">admin@rs1.es</a></p>
+    </footer>
+  </body>
+  <script src='ecStat.min.js'></script>
+  <script src='ecSimpleTransform.js'></script>
+  <script>
+    let fileInput = document.getElementById('file');
+    let submitBtn = document.getElementById('submit');
+    let fileType = document.getElementById('fileType');
+    let sep = document.getElementById('sep');
+    let includeHeader = document.getElementById('includeHeader');
+    let columnNames = document.getElementById('columnNames');
+    let reverseData = document.getElementById('reverseData');
+    let chartTitle = document.getElementById('chartTitle');
+    let chartType = document.getElementById('chartType');
+    let area = document.getElementById('area');
+    let xIndex = document.getElementById('xIndex');
+    let yIndex = document.getElementById('yIndex');
+    let smooth = document.getElementById('smooth');
+    let xType = document.getElementById('xType');
+    let yMin = document.getElementById('yMin');
+    let yMax = document.getElementById('yMax');
+    let showAvg = document.getElementById('showAvg');
+    let showMin = document.getElementById('showMin');
+    let showMax = document.getElementById('showMax');
+    let showMedian = document.getElementById('showMedian');
+    let orderIndex = document.getElementById('orderIndex');
+    let orderDir = document.getElementById('orderDir');
+    let movAvg = document.getElementById('movAvg');
+    let movAvgPeriod = document.getElementById('movAvgPeriod');
+    let calcDiffCheck = document.getElementById('calcDiffCheck');
+    let histogram = document.getElementById('histogram');
+    let groupCheck = document.getElementById('groupCheck');
+    let groupMethod = document.getElementById('groupMethod');
+    let regression = document.getElementById('regression');;
+    let regType = document.getElementById('regType');;
+    let chartDiv = document.getElementById('chart');;
+    let statsDiv = document.getElementById('stats');
+
+    let CSVtoArr = (text) => {
+      let data = [];
+      let sepCharacter = (sep.value != '') ? sep.value : ',';
+      let lines = text.split('\n');
+      let splitRegex = new RegExp(`${sepCharacter}`);
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i] != '') {
+          let fields = lines[i].split(splitRegex);
+          data[i] = [];
+          if (xIndex.value != '' && yIndex.value != '') {
+            let xVal;
+            fields[parseInt(xIndex.value)] = fields[parseInt(xIndex.value)].replace(/\"/g, '');
+            fields[parseInt(xIndex.value)] = fields[parseInt(xIndex.value)].replace(/\,/g, '.');
+            if (!isNaN(fields[parseInt(xIndex.value)])){
+              xVal = (xType.value == 'time' && i != 0)? new Date(fields[parseInt(xIndex.value)]).getTime() : parseFloat(fields[parseInt(xIndex.value)]);
+            } else {
+              xVal = (xType.value == 'time' && i != 0)? new Date(fields[parseInt(xIndex.value)]).getTime() : fields[parseInt(xIndex.value)];
+            }
+            data[i].push(xVal);
+            fields[parseInt(yIndex.value)] = fields[parseInt(yIndex.value)].replace(/\"/g, '');
+            fields[parseInt(yIndex.value)] = fields[parseInt(yIndex.value)].replace(/\,/g, '.');
+            if (!isNaN(fields[parseInt(yIndex.value)])) {
+              data[i].push(parseFloat(fields[parseInt(yIndex.value)]));
+            } else {
+              data[i].push(fields[parseInt(yIndex.value)]);
+            }
+          } else {
+            for (let j = 0; j < fields.length; j++) {
+              fields[j] = fields[j].replace(/\"/g, '');
+              fields[j] = fields[j].replace(/\,/g, '.');
+              if (j == 0) {
+                let val = (xType.value == 'time' && i != 0)? new Date(fields[j]).getTime() : fields[j]
+                data[i].push(val);
+              } else if (!isNaN(fields[j])) {
+                data[i].push(parseFloat(fields[j]));
+              } else {
+                data[i].push(fields[j]);
+              }
+            }
+          }
+        }
+      }
+      if (!includeHeader.checked) {
+        if (columnNames.value != '') {
+          let namesArray = columnNames.value.split(',');
+          data.unshift(namesArray);
+        } else {
+          let namesArray = [];
+          let letters = 'abcdefghijklmnopqrstuvwxyz';
+          for (let i = 0; i < data[0].length; i++) {
+            namesArray.push(letters[i]);
+          }
+          data.unshift(namesArray);
+        }
+      } else {
+        if (columnNames.value != '') {
+          let namesArray = columnNames.value.split(',');
+          data[0] = namesArray;
+        }
+      }
+      return data;
+    }
+
+    let JSONtoArr = (text) => {
+      // Convierta el texto JSON a un objeto JavaScript
+      const jsonData = JSON.parse(text);
+
+      // Obtenga todas las claves únicas en el objeto JSON
+      const keys = Object.keys(jsonData[0]);
+
+      // Construya la fila de encabezado CSV utilizando las claves
+      const headerRow = keys.join(',');
+
+      // Construya las filas de datos CSV
+      const dataRows = jsonData.map((item) =>
+        keys.map((key) => item[key]).join(',')
+      );
+
+      // Combine las filas de encabezado y datos en un solo texto CSV
+      const csvText = [headerRow, ...dataRows].join('\n');
+
+      return CSVtoArr(csvText);
+
+    }
+
+    let reverse = (data) => {
+      let valuesArr = data.slice(1);
+      let reverseArr = valuesArr.reverse();
+      reverseArr.unshift(data[0]);
+      return reverseArr;
+    }
+
+    let calcDiff = (data, index) => {
+      let valuesArr = data.slice(1);
+      let data1 = valuesArr.map((row) => row[index]);
+      let data2 = Array.from(data1);
+      data2.unshift(data2[0]);
+      data2 = data2.slice(0, data2.length - 1);
+      let diff = data2.map((item, i) => (data1[i] - item).toFixed(2));
+      let diff2 = [];
+      for (let k = 0; k < valuesArr.length; k++) {
+        diff2.push([valuesArr[k][0], parseFloat(diff[k])]);
+      }
+      diff2.shift();
+      diff2.unshift([data[0][0], data[0][index]]);
+
+      return diff2;
+    }
+
+    let calcMovAvg = (data, index, period) => {
+      let valuesArr = data.slice(1);
+      let data1 = valuesArr.map((row) => row[index]);
+      let movAvgArr = [];
+      for (let i = 0; i < data1.length; i += period) {
+        if (i >= period - 1) {
+          let movAvgNumber = data1[i];
+          for (let j = 1; j < period; j++) {
+            movAvgNumber += data1[i-1];
+          }
+          movAvgNumber = (movAvgNumber / period).toFixed(2);
+          movAvgArr.push([valuesArr[i][0], parseFloat(movAvgNumber)]);
+        }
+      }
+      movAvgArr.unshift([data[0][0], data[0][index]]);
+      return movAvgArr;
+    }
+
+
+    let addStatistics = (stat, name, col, data) => {
+      let p = document.createElement('p');
+      let valuesArr = data.slice(1);
+      let selectedColArr = (stat == 'median') ? (valuesArr.map((row) => row[col])).sort() : valuesArr.map((row) => row[col]);
+      p.innerText = data[0][col] + ' - ' + name + ': ' +
+      ecStat.statistics[stat](selectedColArr).toFixed(2);
+      statsDiv.appendChild(p);
+    }
+
+    let findDataset = (chartOptions, dtId) => {
+      let res;
+      chartOptions.dataset.forEach((dt) => {
+        if (dt.id == dtId) {
+          res = chartOptions.dataset.indexOf(dt);
+        }
+      })
+      return res;
+    }
+
+    let renderChart = (data, title) => {
+
+      if (reverseData.checked) {
+          data = reverse(data);
+        }
+
+      let chartOptions = {
+        title: {
+          text: title
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        toolbox: {
+          feature: {
+            dataZoom: {
+              yAxisIndex: false
+            },
+            saveAsImage: {},
+            dataView: {
+              readOnly: true
+            }
+          }
+        },
+        grid: {
+          containLabel: false,
+          width: '65%',
+          left: 'center',
+          top: 40,
+          bottom: 80
+        },
+        legend: {
+          type: 'scroll',
+          bottom: 0,
+          padding: [0, 0, 7, 0]
+        },
+        dataset: [
+          {
+            source: data
+          }
+        ],
+        xAxis: {
+          type: xType.value,
+          name: data[0][0],
+          nameLocation: 'middle',
+          nameGap: 40,
+          nameTextStyle: {
+            backgroundColor: 'white'
+          },
+          axisLabel: {
+            rotate: 30,
+            width: 60,
+            overflow: 'truncate'
+          },
+          min: 'dataMin',
+          max: 'dataMax',
+        },
+        yAxis: [],
+        series: []
+      }
+      if (!includeHeader.checked && columnNames.value == '') {
+          chartOptions.dataset.sourceHeader = false;
+      } else {
+          chartOptions.dataset.sourceHeader = true;
+      }
+
+      if (groupCheck.checked || histogram.checked || regression.checked || orderIndex.value != '') {
+        chartOptions.dataset.push({
+            id: 'transformations',
+            transform: []
+          });
+      }
+
+      if (groupCheck.checked) {
+        echarts.registerTransform(ecSimpleTransform.aggregate);
+      }
+      
+
+      if (regression.checked) {
+        echarts.registerTransform(ecStat.transform.regression);
+      }
+      if (histogram.checked) {
+        echarts.registerTransform(ecStat.transform.histogram);
+      }
+
+
+      if (chartType.value == 'pie') {
+        delete chartOptions.xAxis;
+        delete chartOptions.yAxis;
+        delete chartOptions.grid;
+        chartOptions.tooltip.trigger = 'item';
+      }
+
+      statsDiv.innerHTML = '';
+
+      for (let k = 1; k < data[0].length; k++) {
+        if (calcDiffCheck.checked) {
+          chartOptions.dataset.push({
+            id: 'diff_' + k,
+            source: calcDiff(data, k)
+          });
+        }
+      }
+
+      if (orderIndex.value != '') {
+        chartOptions.dataset[findDataset(chartOptions, 'transformations')].fromDatasetIndex = (calcDiffCheck.checked) ? findDataset(chartOptions, 'diff_' + orderIndex.value) : 0;
+        chartOptions.dataset[findDataset(chartOptions, 'transformations')].transform.push({
+          id: 'sort',
+          type: 'sort',
+          config: {
+            dimension: parseInt(orderIndex.value),
+            order: orderDir.value
+          }
+        });
+      }
+
+      if (groupCheck.checked) {
+        chartOptions.dataset[findDataset(chartOptions, 'transformations')].fromDatasetIndex = (calcDiffCheck.checked) ? findDataset(chartOptions, 'diff_1') : 0;
+        chartOptions.dataset[findDataset(chartOptions, 'transformations')].transform.push({
+          id: 'aggregate',
+          type: 'ecSimpleTransform:aggregate',
+          config: {
+            resultDimensions: [
+            {
+              from: data[0][0]
+            }],
+            groupBy: data[0][0]
+          }
+        })
+      }
+
+
+
+      for (let k = 1; k < data[0].length; k++) {
+        let addOrder = orderIndex.value != '';
+        let addHisto = histogram.checked;
+        let addGroup = groupCheck.checked;
+        let seriesOptions = {
+          type: chartType.value,
+          encode: {
+            x: 0,
+            y: k
+          },
+          datasetIndex: (addOrder || addHisto || addGroup) ? findDataset(chartOptions, 'transformations') : 0,
+          symbol: (chartType.value == 'scatter')? 'circle' : 'none',
+          symbolSize: 3,
+          yAxisIndex: k - 1,
+          name: data[0][k]
+        }
+
+        if (calcDiffCheck.checked) {
+          seriesOptions = {
+            type: chartType.value,
+            encode: {
+              x: 0,
+              y: k
+            },
+            datasetIndex: (addOrder|| addHisto || addGroup) ? findDataset(chartOptions, 'transformations') : findDataset(chartOptions, 'diff_' + k),
+            symbol: (chartType.value == 'scatter')? 'circle' : 'none',
+            symbolSize: 3,
+            yAxisIndex: k - 1,
+            name: `${data[0][k]} - diferencias`
+          }
+          if (smooth.checked && chartType.value == 'line') {
+            seriesOptions.smooth = 0.3;
+          }
+        }
+
+        if (chartType.value == 'pie') {
+          delete seriesOptions.encode;
+          seriesOptions.radius = ['30%','60%'];
+          delete seriesOptions.yAxisIndex;
+        }
+        if (area.checked) {
+          seriesOptions.areaStyle = {};
+        }
+        if (smooth.checked && chartType.value == 'line') {
+          seriesOptions.smooth = 0.3;
+        }
+        if (showMin.checked || showMax.checked) {
+          seriesOptions.markPoint = {
+            data: []
+          };
+        }
+
+        if (showMin.checked) {
+          seriesOptions.markPoint.data.push({
+            type: 'min'
+          });
+          addStatistics('min', 'Mínimo', k, (calcDiffCheck.checked) ? chartOptions.dataset[findDataset(chartOptions, 'diff_' + k)].source : data);
+        }
+        if (showMax.checked) {
+          seriesOptions.markPoint.data.push({
+            type: 'max'
+          });
+          addStatistics('max', 'Máximo', k, (calcDiffCheck.checked) ? chartOptions.dataset[findDataset(chartOptions, 'diff_' + k)].source : data);
+        }
+        if (showMedian.checked) {
+          addStatistics('median', 'Mediana', k, (calcDiffCheck.checked) ? chartOptions.dataset[findDataset(chartOptions, 'diff_' + k)].source : data);
+        }
+        if (showDev.checked) {
+          addStatistics('deviation', 'Desviación', k, (calcDiffCheck.checked) ? chartOptions.dataset[k].source : data);
+        }
+        if (showAvg.checked) {
+          seriesOptions.markLine = {
+            data: []
+          };
+          seriesOptions.markLine.data.push({
+              label: {
+                position: 'middle',
+                formatter: 'Media: {c}',
+                backgroundColor: 'white',
+                color: 'inherit'
+              },
+              type: 'average'
+            });
+          addStatistics('mean', 'Media', k, (calcDiffCheck.checked) ? chartOptions.dataset[findDataset(chartOptions, 'diff_' + k)].source : data);
+        }
+
+        chartOptions.series.push(seriesOptions);
+
+        if (histogram.checked) {
+          chartOptions.dataset[findDataset(chartOptions, 'transformations')].fromDatasetIndex = (calcDiffCheck.checked) ? findDataset(chartOptions, 'diff_' + k) : 0;
+          chartOptions.dataset[findDataset(chartOptions, 'transformations')].transform.push({
+            id: 'histogram',
+            type: 'ecStat:histogram',
+            config: {
+              dimensions: [k]
+            }
+          });
+      }
+
+        if (movAvg.checked && movAvgPeriod.value != '') {
+          chartOptions.dataset.push({
+            id: 'movavg_' + k,
+            source: calcMovAvg((calcDiffCheck.checked) ? chartOptions.dataset[findDataset(chartOptions, 'diff_' + k)].source : data, (calcDiffCheck.checked) ? 1 : k, parseInt(movAvgPeriod.value))
+          });
+          chartOptions.series.push({
+            type: 'line',
+            encode: {
+              x: 0,
+              y: k
+            },
+            datasetIndex: findDataset(chartOptions, 'movavg_' + k),
+            symbol: 'none',
+            symbolSize: 3,
+            yAxisIndex: k - 1,
+            name: `${data[0][k]} - media móvil`,
+            smooth: 0.2
+          })
+        }
+
+        if (regression.checked) {
+          chartOptions.dataset[findDataset(chartOptions, 'transformations')].fromDatasetIndex = (calcDiffCheck.checked) ? findDataset(chartOptions, 'diff_' + k) : 0;
+          chartOptions.dataset[findDataset(chartOptions, 'transformations')].transform.push({
+            id: 'regression',
+            type: 'ecStat:regression',
+            config: {
+              method: regType.value
+            },
+          });
+          chartOptions.series.push({
+            name: `${data[0][k]} - modelo`,
+            type: 'line',
+            datasetIndex: findDataset(chartOptions, 'transformations'),
+            label: {
+              show: true,
+              fontSize: 15
+            },
+            labelLayout: {
+              dx: -50
+            },
+            encode: {
+              label: 2,
+              tooltip: 1
+            }
+          })
+        }
+
+
+        let yAxisOptions = {
+          type: 'value',
+          alignTicks: true,
+          name: (histogram.checked) ? 'frecuencia' : data[0][k],
+          nameLocation: 'middle',
+          nameRotate: 90,
+          nameGap: 45,
+          axisLabel: {
+            formatter: (value) => {
+              if (value >= 1000000) {
+                if (Number.isInteger(value / 1000000)) {
+                  return (value / 1000000) + 'm';
+                } else {
+                  return (value / 1000000).toFixed(2) + 'm';
+                }
+              } else if (value >= 1000) {
+                if (Number.isInteger(value / 1000)) {
+                  return (value / 1000) + 'k';
+                } else {
+                  return (value / 1000).toFixed(2) + 'k';
+                }
+              } else {
+                return value;
+              }
+            }
+          }
+        }
+        if (k >= 3) {
+          yAxisOptions.show = false;
+        }
+        if (yMin.value != '') {
+          yAxisOptions.min = parseInt(yMin.value);
+        }
+        if (yMax.value != '') {
+          yAxisOptions.max = parseInt(yMax.value);
+        }
+        if (histogram.checked) {
+          chartOptions.xAxis.name = data[0][k];
+        }
+
+        if (chartType.value != 'pie') {
+          chartOptions.yAxis.push(yAxisOptions);
+        }
+
+        if (addGroup) {
+          chartOptions.dataset[findDataset(chartOptions, 'transformations')].transform.forEach((tr) => {
+            if(tr.id == 'aggregate') {
+              tr.config.resultDimensions.push({
+                from: data[0][k],
+                method: groupMethod.value
+                });
+            }
+          });
+        }
+
+      }
+
+
+
+      console.log(chartOptions);
+      myChart.setOption(chartOptions);
+    }
+
+    let myChart = echarts.init(chartDiv);
+
+    window.addEventListener('resize', function() {
+      myChart.resize();
+    });
+
+    submitBtn.addEventListener('click', () => {
+      myChart.clear();
+      let reader = new FileReader();
+      reader.readAsText(fileInput.files[0]);
+      reader.onload = () => {
+        let text = reader.result;
+        let data = (fileType.value == 'csv') ? CSVtoArr(text) : JSONtoArr(text);
+        renderChart(data, chartTitle.value != '' ? chartTitle.value : fileInput.files[0].name);
+      }
+    });
+
+  </script>
+</html>
